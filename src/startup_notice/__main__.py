@@ -23,6 +23,10 @@ def main() -> int:
         config.title,
     )
 
+    if config.lock_duration_seconds <= 0:
+        log.info("lock_duration_seconds=0, показ окна отключён администратором")
+        return 0
+
     window = LockWindow(config)
     window.show_all()
     window.activate_lock()

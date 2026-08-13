@@ -1,6 +1,6 @@
 Name:           redos-startup-notice
 Version:        1.0.0
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        Информационное окно при входе пользователя в систему
 
 License:        MIT
@@ -50,6 +50,9 @@ install -Dm644 data/config.ini.example \
 %config(noreplace) %{_sysconfdir}/startup-notice/config.ini
 
 %changelog
+* Thu Aug 13 2026 romprs <romprs@gmail.com> - 1.0.0-4
+- lock_duration_seconds=0 теперь полностью отключает показ окна
+
 * Thu Aug 13 2026 romprs <romprs@gmail.com> - 1.0.0-3
 - Добавлен обратный отсчёт времени до разблокировки окна
 

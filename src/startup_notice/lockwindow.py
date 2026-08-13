@@ -129,6 +129,9 @@ class LockWindow(Gtk.Window):
     # -- жизненный цикл блокировки ----------------------------------------
 
     def activate_lock(self) -> None:
+        # В норме при lock_duration_seconds<=0 окно вообще не создаётся
+        # (см. __main__.py); эта ветка — защитный fallback на случай
+        # прямого вызова activate_lock() в обход точки входа.
         duration = self._config.lock_duration_seconds
         if duration <= 0:
             log.info("lock_duration_seconds=0, окно сразу разблокировано")
