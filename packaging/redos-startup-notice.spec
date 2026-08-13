@@ -1,6 +1,6 @@
 Name:           redos-startup-notice
 Version:        1.0.0
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Информационное окно при входе пользователя в систему
 
 License:        MIT
@@ -9,7 +9,7 @@ Source0:        %{name}-%{version}.tar.gz
 BuildArch:      noarch
 
 BuildRequires:  python3-devel
-Requires:       python3-gobject3
+Requires:       python3-gobject
 Requires:       gtk3
 Requires:       systemd
 
@@ -50,5 +50,8 @@ install -Dm644 data/config.ini.example \
 %config(noreplace) %{_sysconfdir}/startup-notice/config.ini
 
 %changelog
+* Thu Aug 13 2026 romprs <romprs@gmail.com> - 1.0.0-2
+- Исправлено имя зависимости: python3-gobject3 -> python3-gobject
+
 * Thu Aug 13 2026 romprs <romprs@gmail.com> - 1.0.0-1
 - Первый релиз: информационное окно при входе пользователя
