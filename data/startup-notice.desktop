@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Startup Notice
+Comment=Показ информационного сообщения при входе пользователя в систему
+Exec=/usr/bin/systemctl --user start startup-notice.service
+Terminal=false
+NoDisplay=true
+X-GNOME-Autostart-enabled=true

@@ -1,0 +1,11 @@
+[Unit]
+Description=Startup Notice - информационное окно при входе пользователя
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/startup-notice
+Restart=no
+
+[Install]
+WantedBy=graphical-session.target
