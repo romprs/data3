@@ -1,6 +1,6 @@
 Name:           redos-startup-notice
 Version:        1.0.0
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Информационное окно при входе пользователя в систему
 
 License:        MIT
@@ -50,6 +50,9 @@ install -Dm644 data/config.ini.example \
 %config(noreplace) %{_sysconfdir}/startup-notice/config.ini
 
 %changelog
+* Thu Aug 13 2026 romprs <romprs@gmail.com> - 1.0.0-3
+- Добавлен обратный отсчёт времени до разблокировки окна
+
 * Thu Aug 13 2026 romprs <romprs@gmail.com> - 1.0.0-2
 - Исправлено имя зависимости: python3-gobject3 -> python3-gobject
 
