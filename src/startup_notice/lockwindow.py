@@ -23,7 +23,8 @@ class LockWindow(Gtk.Window):
         self._config = config
         self._locked = False
         self._watchdog_id = None
-        self._unlock_timer_id = None
+        self._countdown_timer_id = None
+        self._remaining_seconds = 0
 
         self._build_ui()
 
@@ -60,6 +61,10 @@ class LockWindow(Gtk.Window):
             f"{GLib.markup_escape_text(self._config.text)}</span>"
         )
 
+        self._countdown_label = Gtk.Label()
+        self._countdown_label.set_halign(Gtk.Align.CENTER)
+        self._countdown_label.set_no_show_all(True)
+
         self._close_button = Gtk.Button(label="Закрыть")
         self._close_button.set_no_show_all(True)
         self._close_button.set_halign(Gtk.Align.CENTER)
@@ -67,6 +72,7 @@ class LockWindow(Gtk.Window):
 
         outer.pack_start(title_label, False, False, 0)
         outer.pack_start(text_label, False, False, 0)
+        outer.pack_start(self._countdown_label, False, False, 0)
         outer.pack_start(self._close_button, False, False, 0)
 
         self.add(outer)
@@ -130,15 +136,35 @@ class LockWindow(Gtk.Window):
             return
 
         self._locked = True
+        self._remaining_seconds = duration
+        self._update_countdown_label()
+        self._countdown_label.set_no_show_all(False)
+        self._countdown_label.show()
+
         self._watchdog_id = GLib.timeout_add(GRAB_WATCHDOG_INTERVAL_MS, self._grab_watchdog)
-        self._unlock_timer_id = GLib.timeout_add_seconds(duration, self._unlock)
+        self._countdown_timer_id = GLib.timeout_add_seconds(1, self._on_countdown_tick)
         log.info("Блокировка активна на %d сек.", duration)
+
+    def _update_countdown_label(self) -> None:
+        minutes, seconds = divmod(max(self._remaining_seconds, 0), 60)
+        self._countdown_label.set_markup(
+            f"<span size='large'>Окно можно будет закрыть через {minutes:d}:{seconds:02d}</span>"
+        )
+
+    def _on_countdown_tick(self) -> bool:
+        self._remaining_seconds -= 1
+        if self._remaining_seconds <= 0:
+            self._unlock()
+            return False  # не повторять таймер
+        self._update_countdown_label()
+        return True
 
     def _unlock(self) -> bool:
         self._locked = False
-        if self._unlock_timer_id is not None:
-            GLib.source_remove(self._unlock_timer_id)
-            self._unlock_timer_id = None
+        if self._countdown_timer_id is not None:
+            GLib.source_remove(self._countdown_timer_id)
+            self._countdown_timer_id = None
+        self._countdown_label.hide()
         self._release_input()
         self._close_button.set_no_show_all(False)
         self._close_button.show()
