@@ -1,6 +1,6 @@
 Name:           redos-startup-notice
 Version:        1.0.0
-Release:        7%{?dist}
+Release:        8%{?dist}
 Summary:        Информационное окно при входе пользователя в систему
 
 License:        MIT
@@ -43,6 +43,10 @@ install -Dm644 data/startup-notice.service \
     %{buildroot}%{_prefix}/lib/systemd/user/startup-notice.service
 install -Dm644 data/config.ini.example \
     %{buildroot}%{_sysconfdir}/startup-notice/config.ini
+install -Dm644 data/tasks.txt.example \
+    %{buildroot}%{_sysconfdir}/startup-notice/tasks.txt
+install -Dm644 data/phrases.txt.example \
+    %{buildroot}%{_sysconfdir}/startup-notice/phrases.txt
 
 install -d %{buildroot}%{_sysconfdir}/startup-notice/backgrounds
 install -pm644 data/backgrounds/*.jpg \
@@ -54,10 +58,18 @@ install -pm644 data/backgrounds/*.jpg \
 %{_sysconfdir}/xdg/autostart/startup-notice.desktop
 %{_prefix}/lib/systemd/user/startup-notice.service
 %config(noreplace) %{_sysconfdir}/startup-notice/config.ini
+%config(noreplace) %{_sysconfdir}/startup-notice/tasks.txt
+%config(noreplace) %{_sysconfdir}/startup-notice/phrases.txt
 %{_sysconfdir}/startup-notice/backgrounds/
-%doc data/tasks.txt.example data/phrases.txt.example data/backgrounds/SOURCES.md
+%doc data/backgrounds/SOURCES.md
 
 %changelog
+* Thu Sep 03 2026 romprs <romprs@gmail.com> - 1.0.0-8
+- tasks.txt и phrases.txt теперь ставятся как реальные файлы
+  (/etc/startup-notice/{tasks,phrases}.txt, config noreplace), а не
+  только как примеры в документации — после установки ПО сразу готово
+  к работе со своим демонстрационным контентом, без ручных шагов
+
 * Thu Sep 03 2026 romprs <romprs@gmail.com> - 1.0.0-7
 - Исправлен блёклый текст на кнопке «Вперёд!»: системная тема
   переопределяла цвет надписи внутри кнопки собственным правилом для
