@@ -3,55 +3,81 @@
 import configparser
 import logging
 import os
-from dataclasses import dataclass
+import random
+from dataclasses import dataclass, field
+from typing import List, Optional
 
 log = logging.getLogger("startup_notice")
 
 DEFAULT_CONFIG_PATH = "/etc/startup-notice/config.ini"
 
-DEFAULT_TITLE = "Уведомление"
-DEFAULT_TEXT = (
-    "Добро пожаловать в систему.\n"
-    "Настройте текст сообщения в /etc/startup-notice/config.ini"
-)
+DEFAULT_QUOTE = "Настройте фразы дня в файле, указанном в phrases_file."
 DEFAULT_LOCK_DURATION = 30
 DEFAULT_FONT_SIZE = 16
 
 MIN_LOCK_DURATION = 0
 MAX_LOCK_DURATION = 24 * 60 * 60  # 24 часа — разумный верхний предел
 
+IMAGE_EXTENSIONS = (".png", ".jpg", ".jpeg")
+
 
 @dataclass(frozen=True)
 class Config:
-    title: str
-    text: str
     lock_duration_seconds: int
     font_size: int
+    tasks: List[str] = field(default_factory=list)
+    quote: str = DEFAULT_QUOTE
+    background_path: Optional[str] = None
 
 
 def _default_config() -> Config:
     return Config(
-        title=DEFAULT_TITLE,
-        text=DEFAULT_TEXT,
         lock_duration_seconds=DEFAULT_LOCK_DURATION,
         font_size=DEFAULT_FONT_SIZE,
+        tasks=[],
+        quote=DEFAULT_QUOTE,
+        background_path=None,
     )
 
 
-def _read_text(parser: configparser.ConfigParser, config_dir: str) -> str:
-    text_file = parser.get("message", "text_file", fallback=None)
-    if text_file:
-        path = text_file if os.path.isabs(text_file) else os.path.join(config_dir, text_file)
-        try:
-            with open(path, "r", encoding="utf-8") as fh:
-                content = fh.read().strip()
-            if content:
-                return content
-            log.warning("text_file %s пуст, используется text/дефолт", path)
-        except OSError as exc:
-            log.warning("Не удалось прочитать text_file %s: %s", path, exc)
+def _resolve_path(config_dir: str, raw: Optional[str]) -> Optional[str]:
+    if raw is None:
+        return None
+    raw = raw.strip()
+    if not raw:
+        return None
+    return raw if os.path.isabs(raw) else os.path.join(config_dir, raw)
 
-    return parser.get("message", "text", fallback=DEFAULT_TEXT).strip() or DEFAULT_TEXT
+
+def _read_lines(path: Optional[str]) -> List[str]:
+    if not path:
+        return []
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            return [line.strip() for line in fh if line.strip()]
+    except OSError as exc:
+        log.warning("Не удалось прочитать файл %s: %s", path, exc)
+        return []
+
+
+def _pick_background(background_dir: Optional[str]) -> Optional[str]:
+    if not background_dir:
+        return None
+    try:
+        names = os.listdir(background_dir)
+    except OSError as exc:
+        log.warning("Не удалось прочитать каталог фонов %s: %s", background_dir, exc)
+        return None
+
+    candidates = [
+        os.path.join(background_dir, name)
+        for name in names
+        if name.lower().endswith(IMAGE_EXTENSIONS)
+    ]
+    if not candidates:
+        log.warning("В каталоге фонов %s нет изображений", background_dir)
+        return None
+    return random.choice(candidates)
 
 
 def _parse_int(parser: configparser.ConfigParser, section: str, option: str,
@@ -89,17 +115,27 @@ def load_config(path: str = DEFAULT_CONFIG_PATH) -> Config:
 
     config_dir = os.path.dirname(os.path.abspath(path))
 
-    title = parser.get("message", "title", fallback=DEFAULT_TITLE).strip() or DEFAULT_TITLE
-    text = _read_text(parser, config_dir)
+    tasks_file = _resolve_path(config_dir, parser.get("message", "tasks_file", fallback=None))
+    phrases_file = _resolve_path(config_dir, parser.get("message", "phrases_file", fallback=None))
+    background_dir = _resolve_path(config_dir, parser.get("appearance", "background_dir", fallback=None))
+
+    tasks = _read_lines(tasks_file)
+
+    phrases = _read_lines(phrases_file)
+    quote = random.choice(phrases) if phrases else DEFAULT_QUOTE
+
+    background_path = _pick_background(background_dir)
+
     lock_duration = _parse_int(
         parser, "behavior", "lock_duration_seconds",
         DEFAULT_LOCK_DURATION, MIN_LOCK_DURATION, MAX_LOCK_DURATION,
     )
-    font_size = _parse_int(parser, "behavior", "font_size", DEFAULT_FONT_SIZE, 6, 96)
+    font_size = _parse_int(parser, "appearance", "font_size", DEFAULT_FONT_SIZE, 6, 96)
 
     return Config(
-        title=title,
-        text=text,
         lock_duration_seconds=lock_duration,
         font_size=font_size,
+        tasks=tasks,
+        quote=quote,
+        background_path=background_path,
     )

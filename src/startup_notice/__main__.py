@@ -18,9 +18,10 @@ def main() -> int:
 
     config = load_config(DEFAULT_CONFIG_PATH)
     log.info(
-        "Конфигурация: lock_duration=%ds, title=%r",
+        "Конфигурация: lock_duration=%ds, задач=%d, фон=%s",
         config.lock_duration_seconds,
-        config.title,
+        len(config.tasks),
+        config.background_path or "нет",
     )
 
     if config.lock_duration_seconds <= 0:
