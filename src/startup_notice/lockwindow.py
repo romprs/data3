@@ -306,12 +306,13 @@ class LockWindow(Gtk.Window):
         return self._countdown_label
 
     def _build_proceed_button(self) -> Gtk.Widget:
-        # Отдельный оверлей-виджет, чтобы кнопка была строго по центру
-        # экрана, а не только центру узкой текстовой колонки.
+        # Отдельный оверлей-виджет, чтобы кнопка была по центру внизу
+        # всего экрана, а не только центру узкой текстовой колонки.
         self._proceed_button = Gtk.Button(label="Вперёд!")
         self._proceed_button.get_style_context().add_class("proceed-button")
         self._proceed_button.set_halign(Gtk.Align.CENTER)
-        self._proceed_button.set_valign(Gtk.Align.CENTER)
+        self._proceed_button.set_valign(Gtk.Align.END)
+        self._proceed_button.set_margin_bottom(64)
         self._proceed_button.set_no_show_all(True)
         self._proceed_button.connect("clicked", lambda *_: self._quit())
         return self._proceed_button
@@ -372,6 +373,7 @@ class LockWindow(Gtk.Window):
 
     def _build_quote_section(self) -> Gtk.Widget:
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        box.set_margin_bottom(72)
 
         label = Gtk.Label(label="Мысль дня")
         label.get_style_context().add_class("quote-label")

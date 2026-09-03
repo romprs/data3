@@ -1,6 +1,6 @@
 Name:           redos-startup-notice
 Version:        1.0.0
-Release:        8%{?dist}
+Release:        9%{?dist}
 Summary:        Информационное окно при входе пользователя в систему
 
 License:        MIT
@@ -64,6 +64,11 @@ install -pm644 data/backgrounds/*.jpg \
 %doc data/backgrounds/SOURCES.md
 
 %changelog
+* Fri Sep 04 2026 romprs <romprs@gmail.com> - 1.0.0-9
+- Кнопка «Вперёд!» перемещена вниз экрана (по центру по горизонтали, у
+  нижнего края, а не посередине экрана)
+- Блок «Мысль дня» приподнят над нижним краем окна
+
 * Thu Sep 03 2026 romprs <romprs@gmail.com> - 1.0.0-8
 - tasks.txt и phrases.txt теперь ставятся как реальные файлы
   (/etc/startup-notice/{tasks,phrases}.txt, config noreplace), а не
