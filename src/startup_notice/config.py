@@ -13,6 +13,7 @@ DEFAULT_CONFIG_PATH = "/etc/startup-notice/config.ini"
 
 DEFAULT_QUOTE = "Настройте фразы дня в файле, указанном в phrases_file."
 DEFAULT_LOCK_DURATION = 30
+DEFAULT_SECONDS_PER_TASK = 5
 DEFAULT_FONT_SIZE = 16
 
 MIN_LOCK_DURATION = 0
@@ -32,6 +33,12 @@ class Config:
     tasks: List[str] = field(default_factory=list)
     quote: str = DEFAULT_QUOTE
     background_path: Optional[str] = None
+    # True только когда администратор явно прописал lock_duration_seconds
+    # в конфиге (в т.ч. <= 0, чтобы полностью отключить показ окна). Когда
+    # длительность вместо этого вычисляется по числу задач и получается 0
+    # (задач нет), это НЕ отключение — окно всё равно показывается, просто
+    # сразу разблокированным (см. __main__.py).
+    disabled: bool = False
 
 
 def _default_config() -> Config:
@@ -41,6 +48,7 @@ def _default_config() -> Config:
         tasks=[],
         quote=DEFAULT_QUOTE,
         background_path=None,
+        disabled=False,
     )
 
 
@@ -143,10 +151,25 @@ def load_config(path: str = DEFAULT_CONFIG_PATH) -> Config:
 
     background_path = _pick_background(background_dir)
 
-    lock_duration = _parse_int(
-        parser, "behavior", "lock_duration_seconds",
-        DEFAULT_LOCK_DURATION, MIN_LOCK_DURATION, MAX_LOCK_DURATION,
-    )
+    # Если lock_duration_seconds явно прописан в конфиге — это осознанный
+    # выбор администратора (в т.ч. 0, чтобы полностью отключить показ окна),
+    # он и используется как есть. Если ключа нет вовсе — время блокировки
+    # автоматически считается по числу задач (по умолчанию 5 секунд на
+    # задачу; нет задач — 0, окно сразу разблокировано, но не скрыто).
+    if parser.has_section("behavior") and parser.has_option("behavior", "lock_duration_seconds"):
+        lock_duration = _parse_int(
+            parser, "behavior", "lock_duration_seconds",
+            DEFAULT_LOCK_DURATION, MIN_LOCK_DURATION, MAX_LOCK_DURATION,
+        )
+        disabled = lock_duration <= 0
+    else:
+        seconds_per_task = _parse_int(
+            parser, "behavior", "seconds_per_task",
+            DEFAULT_SECONDS_PER_TASK, 0, MAX_LOCK_DURATION,
+        )
+        lock_duration = min(seconds_per_task * len(tasks), MAX_LOCK_DURATION)
+        disabled = False
+
     font_size = _parse_int(parser, "appearance", "font_size", DEFAULT_FONT_SIZE, 6, 96)
 
     return Config(
@@ -155,4 +178,5 @@ def load_config(path: str = DEFAULT_CONFIG_PATH) -> Config:
         tasks=tasks,
         quote=quote,
         background_path=background_path,
+        disabled=disabled,
     )

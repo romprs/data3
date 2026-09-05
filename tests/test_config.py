@@ -175,6 +175,81 @@ def test_explicitly_empty_keys_still_disable_the_block(tmp_path):
     assert config.background_path is None
 
 
+def test_lock_duration_is_computed_from_task_count_by_default(tmp_path):
+    tasks_path = tmp_path / "tasks.txt"
+    tasks_path.write_text("Раз\nДва\nТри\n", encoding="utf-8")
+
+    config_path = tmp_path / "config.ini"
+    config_path.write_text(
+        "[message]\n"
+        f"tasks_file = {tasks_path.name}\n",
+        encoding="utf-8",
+    )
+    config = load_config(str(config_path))
+    assert config.lock_duration_seconds == 15  # 3 задачи * 5 секунд
+    assert config.disabled is False
+
+
+def test_lock_duration_is_zero_but_not_disabled_when_there_are_no_tasks(tmp_path):
+    config_path = tmp_path / "config.ini"
+    config_path.write_text("[message]\n", encoding="utf-8")
+
+    config = load_config(str(config_path))
+    assert config.tasks == []
+    assert config.lock_duration_seconds == 0
+    assert config.disabled is False
+
+
+def test_seconds_per_task_option_overrides_the_default_rate(tmp_path):
+    tasks_path = tmp_path / "tasks.txt"
+    tasks_path.write_text("Раз\nДва\n", encoding="utf-8")
+
+    config_path = tmp_path / "config.ini"
+    config_path.write_text(
+        "[message]\n"
+        f"tasks_file = {tasks_path.name}\n"
+        "[behavior]\n"
+        "seconds_per_task = 10\n",
+        encoding="utf-8",
+    )
+    config = load_config(str(config_path))
+    assert config.lock_duration_seconds == 20  # 2 задачи * 10 секунд
+
+
+def test_explicit_zero_lock_duration_disables_the_window(tmp_path):
+    tasks_path = tmp_path / "tasks.txt"
+    tasks_path.write_text("Задача\n", encoding="utf-8")
+
+    config_path = tmp_path / "config.ini"
+    config_path.write_text(
+        "[message]\n"
+        f"tasks_file = {tasks_path.name}\n"
+        "[behavior]\n"
+        "lock_duration_seconds = 0\n",
+        encoding="utf-8",
+    )
+    config = load_config(str(config_path))
+    assert config.lock_duration_seconds == 0
+    assert config.disabled is True
+
+
+def test_explicit_lock_duration_is_used_as_is_and_ignores_task_count(tmp_path):
+    tasks_path = tmp_path / "tasks.txt"
+    tasks_path.write_text("Раз\nДва\nТри\n", encoding="utf-8")
+
+    config_path = tmp_path / "config.ini"
+    config_path.write_text(
+        "[message]\n"
+        f"tasks_file = {tasks_path.name}\n"
+        "[behavior]\n"
+        "lock_duration_seconds = 45\n",
+        encoding="utf-8",
+    )
+    config = load_config(str(config_path))
+    assert config.lock_duration_seconds == 45
+    assert config.disabled is False
+
+
 def test_malformed_ini_falls_back_to_defaults(tmp_path):
     path = tmp_path / "config.ini"
     path.write_text("this is not valid ini [[[", encoding="utf-8")

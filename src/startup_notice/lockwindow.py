@@ -21,8 +21,8 @@ log = logging.getLogger("startup_notice")
 # Периодичность проверки, что захват ввода всё ещё удерживается нашим окном.
 GRAB_WATCHDOG_INTERVAL_MS = 1000
 
-# Сколько задач показывать списком под заголовком «Задачи N».
-MAX_VISIBLE_TASKS = 5
+# Сколько задач показывать списком под заголовком «Задачи: N».
+MAX_VISIBLE_TASKS = 15
 
 _MONTHS_RU = (
     "января", "февраля", "марта", "апреля", "мая", "июня",
@@ -275,7 +275,7 @@ class LockWindow(Gtk.Window):
         content.set_margin_end(56)
         content.set_margin_top(40)
         content.set_margin_bottom(48)
-        content.set_size_request(560, -1)
+        content.set_size_request(760, -1)
 
         content.pack_start(self._build_header_row(), False, False, 0)
         content.pack_start(self._build_greeting_row(), False, False, 0)
@@ -360,7 +360,7 @@ class LockWindow(Gtk.Window):
         header = Gtk.Label()
         header.get_style_context().add_class("tasks-header")
         header.set_halign(Gtk.Align.START)
-        header.set_markup(f"☑ Задачи {len(tasks)}")
+        header.set_markup(f"Задачи: {len(tasks)}")
         box.pack_start(header, False, False, 0)
 
         for task in tasks[:MAX_VISIBLE_TASKS]:
@@ -453,9 +453,11 @@ class LockWindow(Gtk.Window):
     # -- жизненный цикл блокировки ----------------------------------------
 
     def activate_lock(self) -> None:
-        # В норме при lock_duration_seconds<=0 окно вообще не создаётся
-        # (см. __main__.py); эта ветка — защитный fallback на случай
-        # прямого вызова activate_lock() в обход точки входа.
+        # duration может быть 0 не только при явном отключении админом
+        # (тогда окно вообще не создаётся, см. __main__.py), но и когда
+        # время блокировки считается автоматически по числу задач и задач
+        # нет — тогда окно всё равно показывается, просто сразу
+        # разблокированным (с кнопкой «Вперёд!»), без периода ожидания.
         duration = self._config.lock_duration_seconds
         if duration <= 0:
             log.info("lock_duration_seconds=0, окно сразу разблокировано")

@@ -1,6 +1,6 @@
 Name:           redos-startup-notice
 Version:        1.0.0
-Release:        11%{?dist}
+Release:        12%{?dist}
 Summary:        Информационное окно при входе пользователя в систему
 
 License:        MIT
@@ -64,6 +64,15 @@ install -pm644 data/backgrounds/*.jpg \
 %doc data/backgrounds/SOURCES.md
 
 %changelog
+* Sat Sep 05 2026 romprs <romprs@gmail.com> - 1.0.0-12
+- Список задач: до 15 штук (было 5), заголовок теперь «Задачи: N» без
+  значка галочки
+- Время блокировки по умолчанию считается по числу задач: 5 секунд на
+  задачу (настраивается через seconds_per_task), 0 задач — окно сразу
+  разблокировано. Явно заданный lock_duration_seconds в конфиге
+  по-прежнему работает как раньше и имеет приоритет (включая полное
+  отключение показа окна при lock_duration_seconds=0)
+
 * Sat Sep 05 2026 romprs <romprs@gmail.com> - 1.0.0-11
 - Приветствие теперь показывает имя и отчество (два слова из GECOS),
   а не только имя

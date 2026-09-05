@@ -24,7 +24,7 @@ def main() -> int:
         config.background_path or "нет",
     )
 
-    if config.lock_duration_seconds <= 0:
+    if config.disabled:
         log.info("lock_duration_seconds=0, показ окна отключён администратором")
         return 0
 
