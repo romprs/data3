@@ -1,0 +1,7 @@
+# Пакет ставится и запускается только на Linux (РЕД ОС); CRLF в шебанге
+# скрипта или в systemd/desktop-юнитах ломает запуск ("No such file or
+# directory" при попытке резолвить "#!/bin/sh\r"). Без этого файла git
+# archive на Windows-машине с core.autocrlf=true конвертирует LF в CRLF
+# при экспорте (даже если в самом репозитории файлы хранятся с LF),
+# из-за чего собранный на Windows tar.gz оказывается битым.
+* text=auto eol=lf
