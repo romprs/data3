@@ -1,6 +1,6 @@
 Name:           redos-startup-notice
 Version:        1.0.0
-Release:        10%{?dist}
+Release:        11%{?dist}
 Summary:        Информационное окно при входе пользователя в систему
 
 License:        MIT
@@ -64,6 +64,10 @@ install -pm644 data/backgrounds/*.jpg \
 %doc data/backgrounds/SOURCES.md
 
 %changelog
+* Sat Sep 05 2026 romprs <romprs@gmail.com> - 1.0.0-11
+- Приветствие теперь показывает имя и отчество (два слова из GECOS),
+  а не только имя
+
 * Fri Sep 04 2026 romprs <romprs@gmail.com> - 1.0.0-10
 - Исправлена регрессия при обновлении пакета: старый config.ini (от версий
   до 1.0.0-5), сохраняемый как %config(noreplace), не содержал ключей
