@@ -20,6 +20,10 @@ MAX_LOCK_DURATION = 24 * 60 * 60  # 24 часа — разумный верхн�
 
 IMAGE_EXTENSIONS = (".png", ".jpg", ".jpeg")
 
+DEFAULT_TASKS_FILENAME = "tasks.txt"
+DEFAULT_PHRASES_FILENAME = "phrases.txt"
+DEFAULT_BACKGROUND_DIRNAME = "backgrounds"
+
 
 @dataclass(frozen=True)
 class Config:
@@ -115,9 +119,22 @@ def load_config(path: str = DEFAULT_CONFIG_PATH) -> Config:
 
     config_dir = os.path.dirname(os.path.abspath(path))
 
-    tasks_file = _resolve_path(config_dir, parser.get("message", "tasks_file", fallback=None))
-    phrases_file = _resolve_path(config_dir, parser.get("message", "phrases_file", fallback=None))
-    background_dir = _resolve_path(config_dir, parser.get("appearance", "background_dir", fallback=None))
+    # fallback — не None, а имя файла/каталога, которые ставит пакет рядом
+    # с config.ini: старые конфиги (до появления этих ключей в 1.0.0-5)
+    # сохраняются при обновлении пакета как %config(noreplace) и не содержат
+    # этих опций вовсе — без дефолта по умолчанию задачи/фразы/фон молча
+    # переставали бы работать после обновления. Пустое значение, наоборот,
+    # означает осознанный отказ администратора от блока и по-прежнему
+    # отключает его (см. _resolve_path).
+    tasks_file = _resolve_path(
+        config_dir, parser.get("message", "tasks_file", fallback=DEFAULT_TASKS_FILENAME)
+    )
+    phrases_file = _resolve_path(
+        config_dir, parser.get("message", "phrases_file", fallback=DEFAULT_PHRASES_FILENAME)
+    )
+    background_dir = _resolve_path(
+        config_dir, parser.get("appearance", "background_dir", fallback=DEFAULT_BACKGROUND_DIRNAME)
+    )
 
     tasks = _read_lines(tasks_file)
 

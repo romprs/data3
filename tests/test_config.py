@@ -136,6 +136,45 @@ def test_out_of_range_lock_duration_falls_back_to_default(tmp_path):
     assert config.lock_duration_seconds == DEFAULT_LOCK_DURATION
 
 
+def test_missing_keys_fall_back_to_default_filenames(tmp_path):
+    """Старый config.ini (до появления tasks_file/phrases_file/background_dir
+    в 1.0.0-5) переживает обновление пакета как %config(noreplace) и не
+    содержит этих ключей вовсе — при обновлении пакет всё равно кладёт
+    tasks.txt/phrases.txt/backgrounds рядом с config.ini, и ими нужно
+    пользоваться, а не молча отключать задачи/фразы/фон."""
+    (tmp_path / "tasks.txt").write_text("Задача\n", encoding="utf-8")
+    (tmp_path / "phrases.txt").write_text("Фраза\n", encoding="utf-8")
+    backgrounds_dir = tmp_path / "backgrounds"
+    backgrounds_dir.mkdir()
+    (backgrounds_dir / "sunset.jpg").write_bytes(b"fake-jpeg-data")
+
+    config_path = tmp_path / "config.ini"
+    config_path.write_text("[behavior]\nlock_duration_seconds = 45\n", encoding="utf-8")
+
+    config = load_config(str(config_path))
+    assert config.tasks == ["Задача"]
+    assert config.quote == "Фраза"
+    assert config.background_path == str(backgrounds_dir / "sunset.jpg")
+
+
+def test_explicitly_empty_keys_still_disable_the_block(tmp_path):
+    (tmp_path / "tasks.txt").write_text("Задача\n", encoding="utf-8")
+
+    config_path = tmp_path / "config.ini"
+    config_path.write_text(
+        "[message]\n"
+        "tasks_file =\n"
+        "phrases_file =\n"
+        "[appearance]\n"
+        "background_dir =\n",
+        encoding="utf-8",
+    )
+    config = load_config(str(config_path))
+    assert config.tasks == []
+    assert config.quote == DEFAULT_QUOTE
+    assert config.background_path is None
+
+
 def test_malformed_ini_falls_back_to_defaults(tmp_path):
     path = tmp_path / "config.ini"
     path.write_text("this is not valid ini [[[", encoding="utf-8")
